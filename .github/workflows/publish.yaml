@@ -1,0 +1,54 @@
+name: Publish Package to NPM Registry
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+        env:
+            NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        steps:
+            - id: checkout
+              name: Checkout
+              uses: actions/checkout@v4
+            - id: install-pnpm
+              name: Install pnpm
+              uses: pnpm/action-setup@v2
+              with:
+                  version: 8
+                  run_install: false
+            - id: install-node
+              name: Install Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 20
+                  cache: pnpm
+            - id: setup-env
+              name: Setup Environment
+              run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+            - uses: pnpm/action-setup@v3
+              with:
+                  version: 8
+
+            - id: install
+              name: Install Dependencies
+              run: pnpm install --frozen-lockfile
+
+            - id: build
+              name: Build 📦
+              run: pnpm build
+
+            - id: publish
+              name: Publish 🚀
+              uses: JS-DevTools/npm-publish@v1
+              with:
+                  token: ${{ secrets.NPM_TOKEN }}
+                  access: public
+                  check-version: true
+
+            - if: steps.publish.outputs.type != 'none'
+              run: |
+                  echo "Version changed: ${{ steps.publish.outputs.old-version }} => ${{ steps.publish.outputs.version }}"
