@@ -1,0 +1,41 @@
+{
+	"name": "env-populate",
+	"version": "0.1.0",
+	"description": "CLI tool to scan .env.example files, populate placeholders, and generate .env.local files.",
+	"main": "dist/index.js",
+	"bin": {
+		"env-populate": "dist/index.js"
+	},
+	"scripts": {
+		"build": "tsc",
+		"dev": "npx ts-node -r tsconfig-paths/register ./src/index.ts",
+		"start": "node dist/index.js",
+		"test": "npm run lint",
+		"doc": "typedoc --out docs/typedoc src",
+		"format": "prettier-eslint --write **/*.*",
+		"lint": "eslint .",
+		"lint:prod": "npm run lint -- --config=.eslintrc.prod.json",
+		"script": "ts-node scripts",
+		"clean": "rimraf dist"
+	},
+	"devDependencies": {
+		"@types/node": "^18.19.71",
+		"@typescript-eslint/eslint-plugin": "^7.18.0",
+		"@typescript-eslint/parser": "^7.18.0",
+		"eslint": "^9.18.0",
+		"husky": "^9.1.7",
+		"prettier": "^3.4.2",
+		"prettier-eslint": "^16.3.0",
+		"prettier-eslint-cli": "^8.0.1",
+		"rimraf": "^6.0.1",
+		"ts-node": "^10.9.2",
+		"tsconfig-paths": "^4.2.0",
+		"typedoc": "^0.26.11",
+		"typescript": "~5.4.5"
+	},
+	"dependencies": {
+		"chalk": "^4.1.2",
+		"commander": "^13.0.0",
+		"tslib": "^2.8.1"
+	}
+}
