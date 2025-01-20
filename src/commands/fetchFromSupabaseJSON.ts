@@ -46,14 +46,11 @@ export function fetchFromSupabaseJSON(
 		return placeholders;
 	}
 
-	// For each missing placeholder, check if supabase JSON has an EXACT uppercase match
-	// e.g. <api-url> => "API-URL"
-	for (const missingName of placeholderNames) {
-		const upperName = missingName.toUpperCase();
-		if (jsonData[upperName] && typeof jsonData[upperName] === 'string') {
-			placeholders[missingName] = jsonData[upperName];
-		}
-	}
+	placeholders['supabase-url'] = jsonData.API_URL;
+	placeholders['supabase-anon-key'] = jsonData.ANON_KEY;
+	placeholders['supabase-service-role-key'] = jsonData.SERVICE_ROLE_KEY;
+	placeholders['supabase-graphql-url'] = jsonData.GRAPHQL_URL;
+	placeholders['supabase-db-url'] = jsonData.DB_URL;
 
 	return placeholders;
 }
