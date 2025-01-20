@@ -513,11 +513,11 @@ program
 	.option('-h, --help', 'Display help message');
 
 program
-	.command('populate')
+	.command('fill')
 	.description(
 		'Scan directory for .env.example and populates placeholder values .env.local files in the format of KEY=<placeholder-name> as KEY=my-value'
 	)
-	.option('-o, --output <filename>', 'Output file name (default: .env.local)')
+	.option('-o, --out <filename>', 'Output file name (default: .env.local)')
 	.option(
 		'--no-merge',
 		'Disable merging if the output file already exists',
