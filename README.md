@@ -24,6 +24,7 @@ env-populate fill ./apps
 - `<supabase-service-role-key>`: The service key of the Supabase project.
 - `<supabase-db-url>`: The URL of the Supabase database.
 - `<supabase-graphql-url>`: The URL of the Supabase GraphQL API.
+- `<host-ip>`: The IP address of the host machine.
 
 Any of these placeholder names can be overridden using the `--values` option (see description below).
 
