@@ -26,20 +26,24 @@ interface PlaceholdersMap {
 }
 
 /**
- * Extended options to include new flags:1
+ * Extended options to include new flags:
  * - dryRun?: boolean
  * - override?: boolean
+ * - silent?: boolean
+ * - verbose?: boolean
+ * - ignore?: string
  */
 interface Options {
-	output?: string;
+	out?: string;
 	merge?: boolean;
-	// placeholders from --values
 	values?: string;
-	// additional vars from --vars
 	vars?: string;
-	// new flags
 	dryRun?: boolean;
 	override?: boolean;
+	// New flags
+	silent?: boolean;
+	verbose?: boolean;
+	ignore?: string;
 }
 
 // ----------------------------------------------------------------
@@ -97,26 +101,29 @@ const SUPABASE_JSON_TO_PLACEHOLDER: Record<string, string> = {
  * Runs `supabase status -o json` and returns placeholders found.
  */
 function maybeGetSupabasePlaceholders(
-	missingPlaceholders: string[]
+	missingPlaceholders: string[],
+	log: ReturnType<typeof createLogger>
 ): PlaceholdersMap {
 	const placeholders: PlaceholdersMap = {};
 
-	// Run the command
+	log.verbose(
+		'Invoking `supabase status -o json` to fetch missing placeholders:',
+		missingPlaceholders.join(', ')
+	);
+
 	const result = spawnSync('supabase', ['status', '-o', 'json'], {
 		encoding: 'utf-8',
 	});
 
 	if (result.error) {
-		console.log(
-			chalk.yellow('Warning:'),
-			'Could not run `supabase status -o json`. Some placeholders will remain unpopulated.'
+		log.warn(
+			'Could not run `supabase status -o json`. Some placeholders may remain unpopulated.'
 		);
 		return placeholders;
 	}
 	if (result.status !== 0) {
-		console.log(
-			chalk.yellow('Warning:'),
-			'Non-zero exit code from `supabase status -o json`. Some placeholders will remain unpopulated.'
+		log.warn(
+			'Non-zero exit code from `supabase status -o json`. Some placeholders may remain unpopulated.'
 		);
 		return placeholders;
 	}
@@ -126,10 +133,7 @@ function maybeGetSupabasePlaceholders(
 	try {
 		jsonData = JSON.parse(result.stdout);
 	} catch {
-		console.log(
-			chalk.yellow('Warning:'),
-			'Failed to parse JSON from `supabase status -o json`.'
-		);
+		log.warn('Failed to parse JSON from `supabase status -o json`.');
 		return placeholders;
 	}
 
@@ -157,7 +161,49 @@ function maybeGetSupabasePlaceholders(
 }
 
 // ----------------------------------------------------------------
-// Helper Functions
+// Helper Logging and Ignore Logic
+// ----------------------------------------------------------------
+
+/** Create a logger object that respects --silent, --verbose. */
+function createLogger(options: { silent?: boolean; verbose?: boolean }) {
+	const isSilent = !!options.silent;
+	const isVerbose = !!options.verbose && !isSilent; // if silent is set, we ignore verbose
+
+	return {
+		normal(...args: any[]) {
+			if (!isSilent) {
+				console.log(...args);
+			}
+		},
+		verbose(...args: any[]) {
+			if (isVerbose) {
+				console.log(...args);
+			}
+		},
+		warn(...args: any[]) {
+			if (!isSilent) {
+				console.log(chalk.yellow('Warning:'), ...args);
+			}
+		},
+		error(...args: any[]) {
+			if (!isSilent) {
+				console.log(chalk.red('Error:'), ...args);
+			}
+		},
+	};
+}
+
+/** Parse a comma-separated ignore list into an array of directory names. */
+function parseIgnoreList(input: string): string[] {
+	if (!input.trim()) return [];
+	return input
+		.split(',')
+		.map((x) => x.trim())
+		.filter((x) => x.length > 0);
+}
+
+// ----------------------------------------------------------------
+// More Helper Functions
 // ----------------------------------------------------------------
 
 /** Parse a single line from an .env file into EnvLine. */
@@ -341,7 +387,13 @@ function generateEnvLocalLines(
 // ----------------------------------------------------------------
 
 function generateEnvAction(dirPath: string, options: Options): void {
-	// 1. Parse user placeholders from --values
+	// Create a logger respecting --silent, --verbose
+	const log = createLogger({
+		silent: options.silent,
+		verbose: options.verbose,
+	});
+
+	// Parse user placeholders from --values
 	const userValues = options.values ? parseKeyValuePairs(options.values) : {};
 	const userPlaceholders: PlaceholdersMap = {};
 	for (const rawKey of Object.keys(userValues)) {
@@ -349,20 +401,32 @@ function generateEnvAction(dirPath: string, options: Options): void {
 		userPlaceholders[normalized] = userValues[rawKey];
 	}
 
-	// 2. Parse extra vars from --vars
+	// Parse extra vars from --vars
 	const extraVars = options.vars ? parseKeyValuePairs(options.vars) : {};
 
-	// 3. Collect all .env.example files
+	// Parse the ignore list for directories
+	const ignoreList = options.ignore ? parseIgnoreList(options.ignore) : [];
+
+	// Recursively collect .env.example files
 	const envExampleFiles: string[] = [];
+
 	function scanDir(root: string) {
+		log.verbose(`Scanning directory: ${root}`);
 		const entries = fs.readdirSync(root, { withFileTypes: true });
 		for (const e of entries) {
 			const fullPath = path.join(root, e.name);
+
+			// If this directory is in our ignore list, skip it
+			if (e.isDirectory() && ignoreList.includes(e.name)) {
+				log.verbose(`Skipping ignored directory: ${fullPath}`);
+				continue;
+			}
+
 			if (e.isDirectory()) {
-				// If you want recursion, keep scanning
 				scanDir(fullPath);
 			} else {
 				if (e.name === '.env.example') {
+					log.verbose(`Found .env.example: ${fullPath}`);
 					envExampleFiles.push(fullPath);
 				}
 			}
@@ -371,7 +435,7 @@ function generateEnvAction(dirPath: string, options: Options): void {
 	scanDir(dirPath);
 
 	if (envExampleFiles.length === 0) {
-		console.log(chalk.yellow('No .env.example files found in:'), dirPath);
+		log.normal(chalk.yellow('No .env.example files found in:'), dirPath);
 		return;
 	}
 
@@ -397,6 +461,8 @@ function generateEnvAction(dirPath: string, options: Options): void {
 	const usedSupabase = [...usedPlaceholders].filter((p) =>
 		BUILT_IN_PLACEHOLDER_KEYS.includes(p)
 	);
+	log.verbose(`Used placeholders: ${[...usedPlaceholders].join(', ')}`);
+	log.verbose(`Used SUPABASE placeholders: ${usedSupabase.join(', ')}`);
 
 	// 6. Filter out any that the user has already supplied
 	const missingSupabase = usedSupabase.filter(
@@ -406,12 +472,13 @@ function generateEnvAction(dirPath: string, options: Options): void {
 	// 7. If there's at least 1 missing built-in placeholder, run supabase status
 	let supabasePlaceholders: PlaceholdersMap = {};
 	if (missingSupabase.length > 0) {
-		supabasePlaceholders = maybeGetSupabasePlaceholders(missingSupabase);
+		supabasePlaceholders = maybeGetSupabasePlaceholders(
+			missingSupabase,
+			log
+		);
 	} else {
-		console.log(
-			chalk.gray(
-				'No missing built-in Supabase placeholders. Skipping supabase status.'
-			)
+		log.verbose(
+			'No missing built-in Supabase placeholders. Skipping supabase status.'
 		);
 	}
 
@@ -425,9 +492,13 @@ function generateEnvAction(dirPath: string, options: Options): void {
 	//    because no-merge takes precedence (we won't merge at all).
 	const canOverride = !options.merge && options.override;
 
+	log.verbose(
+		`Starting .env.local generation. Merging: ${!!options.merge}, Override: ${!!canOverride}`
+	);
+
 	// 10. For each .env.example, replace placeholders and merge/write .env.local
 	for (const exampleFile of envExampleFiles) {
-		console.log(chalk.green('Processing:'), exampleFile);
+		log.normal(chalk.green('Processing:'), exampleFile);
 
 		const envExampleLines = fileLinesMap.get(exampleFile)!;
 		const generated = generateEnvLocalLines(
@@ -435,7 +506,7 @@ function generateEnvAction(dirPath: string, options: Options): void {
 			combinedPlaceholders
 		);
 
-		const outputFileName = options.output || '.env.local';
+		const outputFileName = options.out || '.env.local';
 		const outputFilePath = path.join(
 			path.dirname(exampleFile),
 			outputFileName
@@ -443,7 +514,7 @@ function generateEnvAction(dirPath: string, options: Options): void {
 
 		// If file exists and --no-merge is set, skip
 		if (fs.existsSync(outputFilePath) && !options.merge) {
-			console.log(
+			log.normal(
 				chalk.blue(
 					'Skipping because --no-merge is set and file already exists:'
 				),
@@ -454,7 +525,7 @@ function generateEnvAction(dirPath: string, options: Options): void {
 
 		if (fs.existsSync(outputFilePath)) {
 			// MERGE scenario
-			console.log(chalk.cyan('Merging into existing:'), outputFilePath);
+			log.normal(chalk.cyan('Merging into existing:'), outputFilePath);
 
 			// If override = true, we overwrite existing keys
 			const existing = parseEnvFile(outputFilePath);
@@ -465,7 +536,7 @@ function generateEnvAction(dirPath: string, options: Options): void {
 			);
 
 			if (options.dryRun) {
-				console.log(
+				log.normal(
 					chalk.yellow(
 						'[DRY RUN] Would have merged/overwritten .env.local:'
 					),
@@ -473,7 +544,7 @@ function generateEnvAction(dirPath: string, options: Options): void {
 				);
 			} else {
 				writeEnvFile(outputFilePath, merged, extraVars);
-				console.log(
+				log.normal(
 					chalk.cyan('Merged .env.local updated:'),
 					outputFilePath
 				);
@@ -481,7 +552,7 @@ function generateEnvAction(dirPath: string, options: Options): void {
 		} else {
 			// CREATE scenario
 			if (options.dryRun) {
-				console.log(
+				log.normal(
 					chalk.yellow(
 						'[DRY RUN] Would have created new .env.local:'
 					),
@@ -489,7 +560,7 @@ function generateEnvAction(dirPath: string, options: Options): void {
 				);
 			} else {
 				writeEnvFile(outputFilePath, generated, extraVars);
-				console.log(
+				log.normal(
 					chalk.cyan('New .env.local created:'),
 					outputFilePath
 				);
@@ -515,7 +586,7 @@ program
 program
 	.command('fill')
 	.description(
-		'Scan directory for .env.example and populates placeholder values .env.local files in the format of KEY=<placeholder-name> as KEY=my-value'
+		'Scan directory for .env.example and populates placeholder values .env.local files (KEY=<placeholder> -> KEY=...)'
 	)
 	.helpOption('-h, --help', 'Display help message')
 	.option('-o, --out <filename>', 'Output file name (default: .env.local)')
@@ -540,6 +611,13 @@ program
 		'Comma separated list of key=value for extra environment variables',
 		''
 	)
+	.option('--silent', 'Suppress all output', false)
+	.option('--verbose', 'Show extra logs (ignored if --silent)', false)
+	.option(
+		'--ignore <patterns>',
+		'Comma separated list of directory names to skip',
+		''
+	)
 	.argument(
 		'[dir]',
 		'Directory to scan (defaults to current working directory)',
@@ -547,6 +625,12 @@ program
 	)
 	.action((dir: string, opts: Options) => {
 		try {
+			// Because we used `--out` in Commander, but our code expects `options.output`,
+			// we alias that here:
+			if (typeof opts.out === 'string') {
+				opts.out = opts.out;
+			}
+
 			generateEnvAction(path.resolve(dir), opts);
 		} catch (error: any) {
 			console.error(chalk.red('Error:'), error.message);
