@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - Renamed the `populate` command to `fill`.
+- Renamed the `-output` option to `--out`.
 
 ### Fixed
 - Fixed help not displaying properly.
