@@ -7,7 +7,7 @@
 		"env-populate": "dist/index.js"
 	},
 	"scripts": {
-		"build": "tsup src/index.ts --dts --minify --format cjs,esm --out-dir dist",
+		"build": "tsup src/index.ts --dts --minify --format cjs,esm --out-dir dist --verbose",
 		"dev": "npx ts-node -r tsconfig-paths/register ./src/index.ts",
 		"start": "node dist/index.js",
 		"test": "npm run lint",
