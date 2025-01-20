@@ -4,6 +4,7 @@ on:
     push:
         branches:
             - main
+            - release/*
 
 jobs:
     publish:
@@ -35,7 +36,7 @@ jobs:
 
             - id: install
               name: Install Dependencies
-              run: pnpm install --frozen-lockfile
+              run: pnpm install
 
             - id: build
               name: Build 📦
