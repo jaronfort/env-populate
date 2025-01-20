@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- Added `<host-ip>` placeholder that populates the `.env` file with the host machine's IP address.
+
 ### Fixed
 - Corrected the application name in the help output.
 
