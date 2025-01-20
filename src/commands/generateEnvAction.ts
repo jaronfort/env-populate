@@ -2,8 +2,9 @@ import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
 
-import { createLogger } from '@/logs/createLogger';
 import { getLocalIp } from '@/utils/network';
+
+import { createLogger } from '../logs/createLogger';
 
 import { EnvLine } from './EnvLine';
 import { fetchFromSupabaseJSON } from './fetchFromSupabaseJSON';
