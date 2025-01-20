@@ -1,6 +1,6 @@
 {
 	"name": "env-populate",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "CLI tool to scan .env.example files, populate placeholders, and generate .env.local files.",
 	"main": "dist/index.js",
 	"bin": {
