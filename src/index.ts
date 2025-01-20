@@ -26,7 +26,7 @@ interface PlaceholdersMap {
 }
 
 /**
- * Extended options to include new flags:
+ * Extended options to include new flags:1
  * - dryRun?: boolean
  * - override?: boolean
  */
@@ -510,13 +510,14 @@ program
 		'Scan .env.example files, populate placeholders, generate .env.local, etc.'
 	)
 	.version(`v${VERSION}`, '-v, --version', 'Display the version')
-	.option('-h, --help', 'Display help message');
+	.helpOption('-h, --help', 'Display help message');
 
 program
 	.command('fill')
 	.description(
 		'Scan directory for .env.example and populates placeholder values .env.local files in the format of KEY=<placeholder-name> as KEY=my-value'
 	)
+	.helpOption('-h, --help', 'Display help message')
 	.option('-o, --out <filename>', 'Output file name (default: .env.local)')
 	.option(
 		'--no-merge',
