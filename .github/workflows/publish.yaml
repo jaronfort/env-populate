@@ -3,7 +3,6 @@ name: Publish Package to NPM Registry
 on:
     push:
         branches:
-            - main
             - release/*
 
 jobs:
