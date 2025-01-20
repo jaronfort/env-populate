@@ -1,7 +1,6 @@
 import { spawnSync } from 'child_process';
 
-import { createLogger } from '@/logs/createLogger';
-
+import { createLogger } from './createLogger';
 import { PlaceholdersMap } from './PlaceholderMap';
 
 /**
