@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+### Fixed
+- Corrected the application name in the help output.
+
 ## [0.2.0] - 2025-01-20
 ### Added
 - Add `--verbose`, `--silent`, and `--ignore` options to the `fill` (formally `populate`) command.
