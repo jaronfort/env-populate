@@ -4,8 +4,7 @@ import path from 'path';
 
 import { getLocalIp } from '@/utils/network';
 
-import { createLogger } from '../logs/createLogger';
-
+import { createLogger } from './createLogger';
 import { EnvLine } from './EnvLine';
 import { fetchFromSupabaseJSON } from './fetchFromSupabaseJSON';
 import { FillOptions } from './FillOptions';
