@@ -48,13 +48,16 @@ The `fill` command is used to populate `.env` files in a directory. The command 
 env-populate fill [options] [dir]
 ```
 
-| Option          | Description                                                                                                                                           |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--values`      | A comma separated list of placeholder values.                                                                                                         |
-| `--vars`        | A comma separated list of environment variables to add.                                                                                               |
-| `-o` `--out`    | The filename of the `.env` file to generate in each directory. The default is `.env.local`                                                            |
-| `--override`    | By default, env-populate will merge environment variables into the existing .env file. This option will force the entire file to be overridden.       |
-| `--no-merge`    | Do not merge environment variables into the existing .env file. This option will skip .env files that already exist without merging in new variables. |
-| `--dry-run`     | Do not write `.env` files.                                                                                                                            |
-| `-h` `--help`   | Display help for the command.                                                                                                                         |
-| `v` `--version` | Display the version of the command.                                                                                                                   |
+| Option          | Description                                                                                                                                               |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--values`      | A comma separated list of placeholder values.                                                                                                             |
+| `--vars`        | A comma separated list of environment variables to add.                                                                                                   |
+| `-o` `--out`    | The filename of the `.env` file to generate in each directory. The default is `.env.local`                                                                |
+| `--override`    | By default, env-populate will merge environment variables into the existing .env file. This option will force the entire file to be overridden.           |
+| `--no-merge`    | Do not merge environment variables into the existing `.env` file. This option will skip `.env` files that already exist without merging in new variables. |
+| `--verbose`     | Display additional information.                                                                                                                           |
+| `--ignore`      | A comma separated list of patterns for directories to ignore.                                                                                             |
+| `--silent`      | Do not display any output. This option will override --verbose option.                                                                                    |
+| `--dry-run`     | Do not write `.env` files.                                                                                                                                |
+| `-h` `--help`   | Display help for the command.                                                                                                                             |
+| `v` `--version` | Display the version of the command.                                                                                                                       |
