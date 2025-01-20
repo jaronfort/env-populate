@@ -19,11 +19,10 @@ env-populate fill ./apps
 ```
 
 ## Build-in Placeholder Names
-- `<supabase-url>`: The URL of the Supabase project.
+- `<supabase-url>`: The Supabase API URL.
 - `<supabase-anon-key>`: The anonymous key of the Supabase project.
 - `<supabase-service-role-key>`: The service key of the Supabase project.
 - `<supabase-db-url>`: The URL of the Supabase database.
-- `<supabase-api-url>`: The URL of the Supabase API.
 - `<supabase-graphql-url>`: The URL of the Supabase GraphQL API.
 
 Any of these placeholder names can be overridden using the `--values` option (see description below).
